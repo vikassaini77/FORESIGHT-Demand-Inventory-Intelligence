@@ -178,6 +178,62 @@ const Map = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Right Sidebar Analytics Overlay */}
+      <motion.div initial="hidden" animate="show" variants={fadeUpVariant} style={{ position: 'absolute', top: 70, right: 20, bottom: 20, width: '320px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+        
+        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>ROUTE ANALYTICS</span>
+            <span>...</span>
+          </div>
+          <div style={{ color: '#fff', fontSize: '0.9rem', marginBottom: '8px' }}><strong style={{ color: '#fff' }}>SHG</strong> to <strong style={{ color: '#fff' }}>RTM</strong> | Transit: 31 Days</div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', marginBottom: '4px' }}>Transit: 31 Days</div>
+          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', marginBottom: '8px' }}>Volume: 142K TEUs</div>
+          <div style={{ color: '#10b981', fontSize: '0.8rem', textShadow: '0 0 5px rgba(16,185,129,0.5)' }}>Status: Optimized</div>
+        </div>
+
+        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Volume Trend</span>
+            <span>...</span>
+          </div>
+          <Sparkline data={mockVolumeData} color="#0ea5e9" />
+        </div>
+
+        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between' }}>
+            <span>On-Time %</span>
+            <span>%</span>
+          </div>
+          <Sparkline data={mockOnTimeData} color="#10b981" />
+        </div>
+
+        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', flex: 1 }}>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Active Vessels</span>
+            <span>...</span>
+          </div>
+          <table style={{ width: '100%', fontSize: '0.8rem' }}>
+            <thead>
+              <tr>
+                <th style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'left', paddingBottom: '12px', fontWeight: 500 }}>VESSEL ID</th>
+                <th style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'left', paddingBottom: '12px', fontWeight: 500 }}>LOCATION</th>
+                <th style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'right', paddingBottom: '12px', fontWeight: 500 }}>ETA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeVessels.map((v, i) => (
+                <tr key={i}>
+                  <td style={{ color: 'rgba(255,255,255,0.9)', padding: '8px 0' }}>{v.id}</td>
+                  <td style={{ color: 'rgba(255,255,255,0.9)', padding: '8px 0' }}>{v.loc}</td>
+                  <td style={{ color: 'rgba(255,255,255,0.9)', textAlign: 'right', padding: '8px 0' }}>{v.eta}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
       
       {/* Recent Activity Overlay */}
       <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 10, width: '300px' }}>

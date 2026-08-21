@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: foresight-backend
+    env: docker
+    dockerfilePath: ./backend.Dockerfile
+    plan: free
+    healthCheckPath: /docs
+    envVars:
+      - key: PORT
+        value: 8000

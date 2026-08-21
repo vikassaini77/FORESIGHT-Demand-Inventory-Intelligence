@@ -200,8 +200,8 @@ const Map = () => {
 
       <Globe
         ref={globeEl}
-        globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-blue-marble.jpg"
-        bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
+        globeImageUrl="https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg"
+        bumpImageUrl="https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png"
         backgroundColor="rgba(0,0,0,0)"
         
         polygonsData={countries.features}

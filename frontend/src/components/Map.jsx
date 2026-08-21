@@ -25,7 +25,23 @@ const activeVessels = [
 
 export default function Map() {
   const globeEl = useRef();
+  const containerRef = useRef();
   const [countries, setCountries] = useState({ features: [] });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
@@ -35,7 +51,8 @@ export default function Map() {
 
   useEffect(() => {
     if (globeEl.current) {
-      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 2.2 }, 2000);
+      // Adjusted altitude to zoom out and center better
+      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 2.8 }, 2000);
       
       const scene = globeEl.current.scene();
       
@@ -105,7 +122,7 @@ export default function Map() {
   );
 
   return (
-    <div style={{ width: '100%', height: 'calc(100vh - 100px)', position: 'relative', borderRadius: '16px', overflow: 'hidden', background: '#000' }}>
+    <div ref={containerRef} style={{ width: '100%', height: 'calc(100vh - 100px)', position: 'relative', borderRadius: '16px', overflow: 'hidden', background: '#05070a' }}>
       
       {/* Top Header */}
       <div style={{ position: 'absolute', top: 20, left: 320, right: 320, zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
@@ -192,19 +209,23 @@ export default function Map() {
       </motion.div>
 
       {/* The 3D Globe Background */}
-      <Globe
-        ref={globeEl}
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-        bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-        backgroundColor="rgba(0,0,0,0)"
-        
-        arcsData={arcsData}
-        arcColor="color"
-        arcDashLength={0.4}
-        arcDashGap={0.2}
-        arcDashAnimateTime={2000}
-        arcStroke={1}
-      />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Globe
+          ref={globeEl}
+          width={dimensions.width}
+          height={dimensions.height}
+          globeImageUrl="https://unpkg.com/three-globe/example/img/earth-dark.jpg"
+          bumpImageUrl="https://unpkg.com/three-globe/example/img/earth-topology.png"
+          backgroundColor="rgba(0,0,0,0)"
+          
+          arcsData={arcsData}
+          arcColor="color"
+          arcDashLength={0.4}
+          arcDashGap={0.2}
+          arcDashAnimateTime={2000}
+          arcStroke={1}
+        />
+      </div>
     </div>
   );
 }

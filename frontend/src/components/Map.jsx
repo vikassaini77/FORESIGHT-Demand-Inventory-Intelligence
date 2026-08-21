@@ -209,11 +209,7 @@ export default function Map() {
           ref={globeEl}
           globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-blue-marble.jpg"
           bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
-          backgroundImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/night-sky.png"
           backgroundColor="rgba(0,0,0,0)"
-          
-          atmosphereColor="#0ea5e9"
-          atmosphereAltitude={0.15}
           
           arcsData={arcsData}
           arcColor="color"
@@ -227,30 +223,15 @@ export default function Map() {
           pointAltitude={0.05}
           pointRadius={0.4}
           
-          htmlElementsData={portsData}
-          htmlElement={d => {
-            const el = document.createElement('div');
-            el.innerHTML = `
-              <div style="
-                color: white; 
-                font-size: 10px; 
-                font-family: Inter, sans-serif;
-                white-space: nowrap; 
-                background: rgba(10, 15, 25, 0.7); 
-                backdrop-filter: blur(4px);
-                padding: 4px 8px; 
-                border-radius: 4px; 
-                border: 1px solid rgba(255,255,255,0.15);
-                transform: translate(10px, -10px);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-              ">
-                <div style="margin-bottom: 2px;">${d.name}</div>
-                <div style="color: #10b981; font-weight: 600;">${d.stat}</div>
-              </div>
-            `;
-            el.style.pointerEvents = 'none';
-            return el;
-          }}
+          labelsData={portsData}
+          labelLat={d => d.lat}
+          labelLng={d => d.lng}
+          labelText={d => d.name}
+          labelSize={1.5}
+          labelDotRadius={0.5}
+          labelColor={() => 'rgba(255,255,255,0.9)'}
+          labelResolution={2}
+          labelAltitude={0.06}
         />
       </div>
     </div>

@@ -6,6 +6,10 @@ import joblib
 import pandas as pd
 import numpy as np
 import os
+from dotenv import load_dotenv
+
+# Load local environment variables from .env
+load_dotenv()
 
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status

@@ -27,7 +27,7 @@ function SimulatorTab() {
           "Competitor Pricing": 48
         }];
 
-        const res = await axios.post('http://localhost:8000/api/predict/sales', payload);
+        const res = await axios.post(import.meta.env.VITE_API_URL + '/api/predict/sales', payload);
         const units = res.data[0].predicted_units_sold;
         setPrediction({
           units: units,

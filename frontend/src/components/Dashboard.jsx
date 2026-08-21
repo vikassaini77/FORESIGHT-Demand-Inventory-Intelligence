@@ -54,7 +54,7 @@ function Dashboard() {
   const handleForecast = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8000/forecast', { store_id: storeId, item_id: itemId });
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/forecast', { store_id: storeId, item_id: itemId });
       setForecastData(res.data);
       addToast('Forecast generated successfully', 'success');
     } catch (err) {
@@ -67,7 +67,7 @@ function Dashboard() {
   const handlePricing = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8000/pricing/optimize', { store_id: pricingStoreId, item_id: pricingItemId });
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/pricing/optimize', { store_id: pricingStoreId, item_id: pricingItemId });
       setPricingData(res.data);
       addToast('Pricing optimized', 'success');
     } catch (err) {
@@ -80,7 +80,7 @@ function Dashboard() {
   const handlePO = async () => {
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8000/po/generate', { store_id: poStoreId });
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/po/generate', { store_id: poStoreId });
       setPoData(res.data);
       addToast(`PO generated for ${poStoreId}`, 'success');
     } catch (err) {

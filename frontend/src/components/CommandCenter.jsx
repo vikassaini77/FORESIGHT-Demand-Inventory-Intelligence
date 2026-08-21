@@ -36,7 +36,7 @@ const CommandCenter = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/chat', { message: userMsg.text });
+      const response = await axios.post(import.meta.env.VITE_API_URL + '/api/chat', { message: userMsg.text });
       const botMsg = { id: Date.now() + 1, sender: 'bot', text: response.data.response };
       setMessages(prev => [...prev, botMsg]);
     } catch (error) {

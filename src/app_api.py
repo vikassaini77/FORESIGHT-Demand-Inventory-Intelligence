@@ -24,7 +24,7 @@ app = FastAPI(title="Project FORESIGHT API", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("FRONTEND_URL", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

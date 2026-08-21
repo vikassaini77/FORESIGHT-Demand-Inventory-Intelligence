@@ -9,7 +9,7 @@ function InventoryTab({ invKpi, invHealth }) {
   const generatePOs = async () => {
     setPoStatus('Generating...');
     try {
-      const res = await axios.post('http://localhost:8000/api/inventory/generate_pos');
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/api/inventory/generate_pos');
       if (res.data.status === 'success') {
         setPoStatus(res.data.message);
       } else {

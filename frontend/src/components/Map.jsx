@@ -85,7 +85,7 @@ const Map = () => {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws/supply-chain');
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL + '/ws/supply-chain');
 
     ws.onopen = () => {
       setStatus('Live Satellite Feed Active');

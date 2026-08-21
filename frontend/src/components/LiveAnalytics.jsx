@@ -15,7 +15,7 @@ const LiveAnalytics = () => {
     }));
     setData(initialData);
 
-    const ws = new WebSocket('ws://localhost:8000/ws/live-analytics');
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL + '/ws/live-analytics');
 
     ws.onopen = () => setStatus('Connected');
     ws.onclose = () => setStatus('Disconnected. Retrying...');

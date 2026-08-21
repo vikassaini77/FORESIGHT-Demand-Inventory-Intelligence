@@ -10,7 +10,7 @@ function SalesTab({ salesKpi, salesHealth, revByWeather }) {
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/sales/optimal_pricing?limit=5');
+        const res = await axios.get(import.meta.env.VITE_API_URL + '/api/sales/optimal_pricing?limit=5');
         setOptimalPricing(res.data);
       } catch (err) {
         console.error("Error fetching pricing", err);

@@ -39,7 +39,7 @@ function Layout({ children }) {
 
   // Real-Time Notification Simulator (WebSockets)
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws/alerts');
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL + '/ws/alerts');
 
     ws.onmessage = (event) => {
       const newAlert = JSON.parse(event.data);

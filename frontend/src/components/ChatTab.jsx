@@ -19,7 +19,7 @@ function ChatTab() {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8000/api/chat', { message: userMsg });
+      const res = await axios.post(import.meta.env.VITE_API_URL + '/api/chat', { message: userMsg });
       setMessages(prev => [...prev, { sender: 'ai', text: res.data.response }]);
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'ai', text: "Sorry, I'm having trouble connecting to the backend." }]);

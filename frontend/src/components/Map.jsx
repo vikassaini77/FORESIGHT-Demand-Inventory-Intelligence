@@ -25,23 +25,7 @@ const activeVessels = [
 
 export default function Map() {
   const globeEl = useRef();
-  const containerRef = useRef();
   const [countries, setCountries] = useState({ features: [] });
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height
-        });
-      }
-    });
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
@@ -51,39 +35,12 @@ export default function Map() {
 
   useEffect(() => {
     if (globeEl.current) {
-      // Adjusted altitude to zoom out and center better
-      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 2.8 }, 2000);
+      // Set initial camera position slightly further back so it's smaller and centered
+      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 3.2 }, 0);
       
-      const scene = globeEl.current.scene();
-      
-      // Add subtle blue glowing atmosphere
-      const geometry = new THREE.SphereGeometry(102, 64, 64);
-      const material = new THREE.MeshPhongMaterial({
-        color: 0x0088ff,
-        transparent: true,
-        opacity: 0.15,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      const atmosphere = new THREE.Mesh(geometry, material);
-      scene.add(atmosphere);
-
-      // Auto-rotate
-      let animationFrameId;
-      const animateScene = () => {
-        globeEl.current.controls().autoRotate = true;
-        globeEl.current.controls().autoRotateSpeed = 0.5;
-        animationFrameId = requestAnimationFrame(animateScene);
-      };
-      animateScene();
-
-      return () => {
-        cancelAnimationFrame(animationFrameId);
-        scene.remove(atmosphere);
-        geometry.dispose();
-        material.dispose();
-      };
+      // Just auto-rotate
+      globeEl.current.controls().autoRotate = true;
+      globeEl.current.controls().autoRotateSpeed = 0.5;
     }
   }, []);
 
@@ -122,7 +79,7 @@ export default function Map() {
   );
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: 'calc(100vh - 100px)', position: 'relative', borderRadius: '16px', overflow: 'hidden', background: '#05070a' }}>
+    <div style={{ width: '100%', height: 'calc(100vh - 100px)', position: 'relative', borderRadius: '16px', overflow: 'hidden', background: '#05070a' }}>
       
       {/* Top Header */}
       <div style={{ position: 'absolute', top: 20, left: 320, right: 320, zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
@@ -209,13 +166,11 @@ export default function Map() {
       </motion.div>
 
       {/* The 3D Globe Background */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
         <Globe
           ref={globeEl}
-          width={dimensions.width}
-          height={dimensions.height}
-          globeImageUrl="https://unpkg.com/three-globe/example/img/earth-dark.jpg"
-          bumpImageUrl="https://unpkg.com/three-globe/example/img/earth-topology.png"
+          globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-dark.jpg"
+          bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
           backgroundColor="rgba(0,0,0,0)"
           
           arcsData={arcsData}

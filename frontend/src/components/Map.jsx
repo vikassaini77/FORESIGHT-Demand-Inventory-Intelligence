@@ -1,239 +1,237 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import { motion } from 'framer-motion';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
-import { Activity, Navigation, Ship, Globe as GlobeIcon, Crosshair } from 'lucide-react';
+import { Activity, MapPin, Upload } from 'lucide-react';
+import * as THREE from 'three';
+import { useToast } from '../context/ToastContext';
+import FileDropzone from './FileDropzone';
+import { AnimatePresence } from 'framer-motion';
 
-const mockVolumeData = [
-  { name: 'Mon', value: 1000 },
-  { name: 'Tue', value: 1800 },
-  { name: 'Wed', value: 1200 },
-  { name: 'Thu', value: 2500 },
-  { name: 'Fri', value: 2100 },
-  { name: 'Sat', value: 2900 },
-  { name: 'Sun', value: 3800 },
-];
-
-const mockOnTimeData = [
-  { name: 'Mon', value: 92 },
-  { name: 'Tue', value: 95 },
-  { name: 'Wed', value: 89 },
-  { name: 'Thu', value: 96 },
-  { name: 'Fri', value: 94 },
-  { name: 'Sat', value: 98 },
-  { name: 'Sun', value: 97 },
-];
-
-export default function Map() {
+const Map = () => {
   const globeEl = useRef();
-  
-  // Ports data for labels and glowing nodes
-  const portsData = [
-    { lat: 51.9, lng: 4.4, name: 'Rotterdam [RTM]', stat: '85%' },
-    { lat: 34.0, lng: -118.2, name: 'Los Angeles [LAX]', stat: '118%' },
-    { lat: 25.2, lng: 55.2, name: 'Dubai [DXB]', stat: '93%' },
-    { lat: 1.3, lng: 103.8, name: 'Singapore [SIN]', stat: '82%' },
-    { lat: 31.2, lng: 121.5, name: 'Shanghai [SHG]', stat: '78%' },
-    { lat: 40.7, lng: -74.0, name: 'New York [JFK]', stat: '90%' }
-  ];
-
-  // Complex network of routes
-  const arcsData = [
-    { startLat: 31.2, startLng: 121.5, endLat: 51.9, endLng: 4.4, color: '#10b981' }, 
-    { startLat: 31.2, startLng: 121.5, endLat: 34.0, endLng: -118.2, color: '#0ea5e9' },
-    { startLat: 1.3, startLng: 103.8, endLat: 25.2, endLng: 55.2, color: '#f97316' },
-    { startLat: 51.9, startLng: 4.4, endLat: 40.7, endLng: -74.0, color: '#10b981' },
-    { startLat: -33.8, startLng: 151.2, endLat: 1.3, endLng: 103.8, color: '#f97316' },
-    { startLat: -23.5, startLng: -46.6, endLat: 40.7, endLng: -74.0, color: '#0ea5e9' },
-    { startLat: 25.2, startLng: 55.2, endLat: 51.9, endLng: 4.4, color: '#10b981' },
-    { startLat: 34.0, startLng: -118.2, endLat: -33.8, endLng: 151.2, color: '#0ea5e9' },
-    { startLat: 1.3, startLng: 103.8, endLat: 31.2, endLng: 121.5, color: '#10b981' }
-  ];
-
-  const activeVessels = [
-    { id: 'AE12831', loc: 'Shanghai', eta: '31.2m' },
-    { id: 'AE10022', loc: 'Shanghai', eta: '31.3m' },
-    { id: 'AE10003', loc: 'New York', eta: '29.3m' },
-    { id: 'AE10037', loc: 'Location', eta: '20.5m' },
-    { id: 'AE10078', loc: 'New York', eta: '20.5m' },
-  ];
+  const [arcsData, setArcsData] = useState([]);
+  const [status, setStatus] = useState('Connecting to live feed...');
+  const [countries, setCountries] = useState({ features: [] });
+  const [hoverD, setHoverD] = useState();
+  const { addToast } = useToast();
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
+    // Load country data
+    fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+      .then(res => res.json())
+      .then(setCountries);
+  }, []);
+
+  useEffect(() => {
+    // Initial camera position
     if (globeEl.current) {
-      // Set initial camera position slightly further back so it fits perfectly
-      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 2.5 }, 0);
-      globeEl.current.controls().autoRotate = true;
-      globeEl.current.controls().autoRotateSpeed = 0.5;
+      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, 2000);
+      
+      // Add realistic Earth clouds layer
+      const scene = globeEl.current.scene();
+      const geometry = new THREE.SphereGeometry(101.5, 64, 64);
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.setCrossOrigin('anonymous');
+      
+      const material = new THREE.MeshPhongMaterial({
+        map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png'),
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const clouds = new THREE.Mesh(geometry, material);
+      scene.add(clouds);
+      
+      // Add Orbiting Moon
+      const moonGeo = new THREE.SphereGeometry(8, 32, 32);
+      const moonMat = new THREE.MeshPhongMaterial({
+        map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg'),
+        color: 0xffffff,
+        emissive: 0x444444 // Brighter so it stands out more
+      });
+      const moon = new THREE.Mesh(moonGeo, moonMat);
+      moon.position.set(140, 15, 0); // Closer to Earth so it isn't cut off by the screen edge
+      
+      const moonPivot = new THREE.Group();
+      moonPivot.add(moon);
+      scene.add(moonPivot);
+      
+      let animationFrameId;
+      const animateScene = () => {
+        if (clouds) {
+          clouds.rotation.y += 0.002; 
+        }
+        if (moonPivot) {
+          moonPivot.rotation.y -= 0.005; // orbit speed
+          moon.rotation.y += 0.01; // moon's own rotation
+        }
+        animationFrameId = requestAnimationFrame(animateScene);
+      };
+      animateScene();
+
+      return () => {
+        cancelAnimationFrame(animationFrameId);
+        scene.remove(clouds);
+        scene.remove(moonPivot);
+        geometry.dispose();
+        material.dispose();
+        moonGeo.dispose();
+        moonMat.dispose();
+      };
     }
   }, []);
 
-  const fadeUpVariant = {
-    hidden: { opacity: 0, x: 20 },
-    show: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-  };
+  useEffect(() => {
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL + '/ws/supply-chain');
 
-  const fadeRightVariant = {
-    hidden: { opacity: 0, x: -20 },
-    show: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-  };
+    ws.onopen = () => {
+      setStatus('Live Satellite Feed Active');
+    };
 
-  const Sparkline = ({ data, color }) => (
-    <div style={{ height: '50px', width: '100%', marginTop: '4px' }}>
-      <ResponsiveContainer>
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.6}/>
-              <stop offset="95%" stopColor={color} stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <Area type="monotone" dataKey="value" stroke={color} fill={`url(#gradient-${color})`} strokeWidth={2} style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      const newArc = {
+        startLat: data.startLat,
+        startLng: data.startLng,
+        endLat: data.endLat,
+        endLng: data.endLng,
+        color: data.color,
+        name: `${data.origin} → ${data.dest}`
+      };
+
+      setArcsData((prev) => [...prev, newArc].slice(-15)); // Keep last 15 active arcs
+    };
+
+    ws.onclose = () => {
+      setStatus('Connection lost. Reconnecting...');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  const N_RINGS = 12;
+  const ringsData = useMemo(() => [...Array(N_RINGS).keys()].map(() => ({
+    lat: (Math.random() - 0.5) * 180,
+    lng: (Math.random() - 0.5) * 360,
+    maxR: Math.random() * 20 + 3,
+    propagationSpeed: (Math.random() - 0.5) * 2 + 1,
+    repeatPeriod: Math.random() * 2000 + 200
+  })), []);
 
   return (
-    <div style={{ 
+    <div className="animated-sky" style={{ 
       width: '100%', 
       height: 'calc(100vh - 100px)', 
       position: 'relative', 
       borderRadius: '16px', 
-      overflow: 'hidden', 
-      background: 'radial-gradient(circle at 50% 120%, rgba(14, 165, 233, 0.4) 0%, rgba(5, 7, 10, 1) 50%, #000 100%)',
-      boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)'
+      overflow: 'hidden'
     }}>
+      {/* Header Overlay */}
+      <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(10px)', padding: '16px 24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <h2 style={{ margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MapPin size={24} color="var(--accent-color)" />
+          Global Supply Chain
+        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: status.includes('Active') ? 'var(--success)' : 'var(--danger)', boxShadow: `0 0 10px ${status.includes('Active') ? 'var(--success)' : 'var(--danger)'}` }} />
+          {status}
+        </div>
+      </div>
+
+      {/* Upload Toggle Button */}
+      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+        <button 
+          className="btn" 
+          onClick={() => setShowUpload(!showUpload)}
+          style={{ background: 'rgba(5, 5, 5, 0.7)', color: 'white', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px' }}
+        >
+          <Upload size={16} /> {showUpload ? 'Close' : 'Bulk Ingest'}
+        </button>
+      </div>
+
+      {/* Upload Panel */}
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            style={{ position: 'absolute', top: 70, right: 20, zIndex: 10, width: '400px' }}
+          >
+            <div className="chart-card" style={{ padding: '24px', background: 'rgba(10,10,10,0.85)', backdropFilter: 'blur(20px)' }}>
+              <FileDropzone 
+                title="Supply Chain Routes"
+                description="Upload CSV containing origin and destination coordinates"
+                acceptedTypes=".csv"
+                onUploadSuccess={(file) => {
+                  addToast(`Ingested ${file.name}. Plotting new routes...`, 'success');
+                  setTimeout(() => setShowUpload(false), 3000);
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {/* Top Header */}
-      <div style={{ position: 'absolute', top: 20, left: 320, right: 320, zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 24px' }}>
-         <div style={{ display: 'none' }}> {/* Hidden to match screenshot exactly which has no top header */} </div>
+      {/* Recent Activity Overlay */}
+      <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 10, width: '300px' }}>
+        <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Activity size={16} /> Live Shipments
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {arcsData.slice(-3).reverse().map((arc, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              style={{ background: 'rgba(5,5,5,0.8)', borderLeft: `3px solid ${arc.color}`, padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}
+            >
+              {arc.name}
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      {/* Left Sidebar Overlay */}
-      <motion.div initial="hidden" animate="show" variants={fadeRightVariant} style={{ position: 'absolute', top: 20, left: 20, bottom: 20, width: '280px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div className="chart-card" style={{ padding: '0', background: 'rgba(5, 10, 20, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em' }}>LIVE TRACKING</div>
-            <div style={{ fontSize: '1.25rem', color: '#10b981', fontWeight: 700, marginTop: '4px', textShadow: '0 0 10px rgba(16,185,129,0.5)' }}>ASIA-EUROPE [AE1]</div>
-          </div>
-          
-          <div style={{ padding: '8px 0' }}>
-            <div className="nav-item" style={{ padding: '12px 20px', display: 'flex', gap: '12px', alignItems: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-              <Activity size={18} /> OVERVIEW
-            </div>
-            <div className="nav-item" style={{ padding: '12px 20px', display: 'flex', gap: '12px', alignItems: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-              <Navigation size={18} /> ROUTES
-            </div>
-            <div className="nav-item active" style={{ padding: '12px 20px', display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '0.85rem', borderLeft: '3px solid #fff' }}>
-              <Ship size={18} /> ASSETS
-            </div>
-            <div className="nav-item" style={{ padding: '12px 20px', display: 'flex', gap: '12px', alignItems: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-              <Crosshair size={18} /> ALERTS
-            </div>
-            <div className="nav-item" style={{ padding: '12px 20px', display: 'flex', gap: '12px', alignItems: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-              <Activity size={18} /> ANALYTICS
-            </div>
-          </div>
-        </div>
+      <Globe
+        ref={globeEl}
+        globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-blue-marble.jpg"
+        bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
+        backgroundColor="rgba(0,0,0,0)"
         
-        {/* Floating Ship Icon Badge */}
-        <div style={{ marginTop: 'auto', alignSelf: 'center', background: 'linear-gradient(135deg, rgba(14,165,233,0.2) 0%, rgba(14,165,233,0.05) 100%)', padding: '24px', borderRadius: '50%', border: '1px solid rgba(14,165,233,0.4)', boxShadow: '0 0 40px rgba(14,165,233,0.3)', backdropFilter: 'blur(10px)' }}>
-          <Ship size={40} color="#0ea5e9" />
-        </div>
-        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', letterSpacing: '0.15em', marginTop: '-4px' }}>LIVE TRACKING</div>
-      </motion.div>
-
-      {/* Right Sidebar Overlay */}
-      <motion.div initial="hidden" animate="show" variants={fadeUpVariant} style={{ position: 'absolute', top: 20, right: 20, bottom: 20, width: '300px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+        polygonsData={countries.features}
+        polygonAltitude={d => d === hoverD ? 0.02 : 0.005}
+        polygonCapColor={d => d === hoverD ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0)'}
+        polygonSideColor={() => 'rgba(0,0,0,0)'}
+        polygonStrokeColor={() => 'rgba(255, 255, 255, 0.1)'}
+        polygonLabel={({ properties: d }) => `
+          <div style="background: rgba(10, 10, 10, 0.85); border: 1px solid var(--accent-color); padding: 10px 14px; border-radius: 8px; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            <strong style="color: #fff; font-size: 1.1rem; display: block; margin-bottom: 4px;">${d.ADMIN}</strong>
+            <span style="color: #a1a1aa; font-size: 0.85rem; display: block;">ISO: ${d.ISO_A2}</span>
+            <span style="color: #a1a1aa; font-size: 0.85rem; display: block;">Population: ${(d.POP_EST / 1000000).toFixed(1)}M</span>
+          </div>
+        `}
+        onPolygonHover={setHoverD}
         
-        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
-          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span>ROUTE ANALYTICS</span>
-            <span>...</span>
-          </div>
-          <div style={{ color: '#fff', fontSize: '0.85rem', marginBottom: '8px' }}><strong style={{ color: '#fff' }}>SHG</strong> to <strong style={{ color: '#fff' }}>RTM</strong> | Transit: 31 Days</div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', marginBottom: '4px' }}>Transit: 31 Days</div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', marginBottom: '8px' }}>Volume: 142K TEUs</div>
-          <div style={{ color: '#10b981', fontSize: '0.75rem', textShadow: '0 0 5px rgba(16,185,129,0.5)' }}>Status: Optimized</div>
-        </div>
-
-        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
-          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Volume Trend</span>
-            <span>...</span>
-          </div>
-          <Sparkline data={mockVolumeData} color="#0ea5e9" />
-        </div>
-
-        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
-          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between' }}>
-            <span>On-Time %</span>
-            <span>%</span>
-          </div>
-          <Sparkline data={mockOnTimeData} color="#10b981" />
-        </div>
-
-        <div className="chart-card" style={{ background: 'rgba(5, 10, 20, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', flex: 1 }}>
-          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Active Vessels</span>
-            <span>...</span>
-          </div>
-          <table style={{ width: '100%', fontSize: '0.7rem' }}>
-            <thead>
-              <tr>
-                <th style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'left', paddingBottom: '12px', fontWeight: 500 }}>VESSEL ID</th>
-                <th style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'left', paddingBottom: '12px', fontWeight: 500 }}>LOCATION</th>
-                <th style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'right', paddingBottom: '12px', fontWeight: 500 }}>ETA</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeVessels.map((v, i) => (
-                <tr key={i}>
-                  <td style={{ color: 'rgba(255,255,255,0.8)', padding: '8px 0' }}>{v.id}</td>
-                  <td style={{ color: 'rgba(255,255,255,0.8)', padding: '8px 0' }}>{v.loc}</td>
-                  <td style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'right', padding: '8px 0' }}>{v.eta}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-      </motion.div>
-
-      {/* Behind-Globe Glow */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none' }}></div>
-
-      {/* The 3D Globe Background */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-        <Globe
-          ref={globeEl}
-          globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-blue-marble.jpg"
-          bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
-          backgroundColor="rgba(0,0,0,0)"
-          
-          arcsData={arcsData}
-          arcColor="color"
-          arcDashLength={0.4}
-          arcDashGap={0.2}
-          arcDashAnimateTime={3000}
-          arcStroke={0.5}
-          
-          pointsData={portsData}
-          pointColor={() => '#f97316'}
-          pointAltitude={0.05}
-          pointRadius={0.4}
-          
-          labelsData={portsData}
-          labelLat={d => d.lat}
-          labelLng={d => d.lng}
-          labelText={d => d.name}
-          labelSize={1.5}
-          labelDotRadius={0.5}
-          labelColor={() => 'rgba(255,255,255,0.9)'}
-          labelResolution={2}
-          labelAltitude={0.06}
-        />
-      </div>
+        arcsData={arcsData}
+        arcColor="color"
+        arcDashLength={() => Math.random()}
+        arcDashGap={() => Math.random()}
+        arcDashAnimateTime={() => Math.random() * 4000 + 1000}
+        
+        ringsData={ringsData}
+        ringColor={() => t => `rgba(255,100,50,${1-t})`}
+        ringMaxRadius="maxR"
+        ringPropagationSpeed="propagationSpeed"
+        ringRepeatPeriod="repeatPeriod"
+      />
     </div>
   );
-}
+};
+
+export default Map;

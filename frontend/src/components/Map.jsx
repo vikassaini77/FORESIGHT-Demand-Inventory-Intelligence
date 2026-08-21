@@ -97,6 +97,14 @@ const Map = () => {
         }
       });
       
+      // Add Lightning Storm (Point Lights that flash)
+      const stormLights = [];
+      for (let i = 0; i < 3; i++) {
+        const light = new THREE.PointLight(0x88ccff, 0, 150);
+        scene.add(light);
+        stormLights.push({ light, flashTimer: 0 });
+      }
+      
       const clock = new THREE.Clock();
       let animationFrameId;
       const animateScene = () => {
@@ -114,6 +122,27 @@ const Map = () => {
           bp.group.rotation.y -= bp.speed; // rotate negatively so they fly forward (due to bird.rotation.y)
         });
         
+        // Lightning effect animation
+        stormLights.forEach(sl => {
+           if (sl.flashTimer > 0) {
+             sl.flashTimer -= delta;
+             // Rapid decay
+             sl.light.intensity = Math.max(0, sl.light.intensity - 200 * delta);
+           } else {
+             // Small random chance to trigger a new lightning strike
+             if (Math.random() > 0.985) {
+               sl.flashTimer = 0.1 + Math.random() * 0.3; // duration of flash cluster
+               // Move the strike to a random position just under the clouds
+               sl.light.position.setFromSphericalCoords(101, Math.acos(-1 + 2 * Math.random()), Math.random() * Math.PI * 2);
+             }
+           }
+           
+           // If we are in a flash window, flicker intensely
+           if (sl.flashTimer > 0 && Math.random() > 0.6) {
+             sl.light.intensity = 50 + Math.random() * 150;
+           }
+        });
+        
         animationFrameId = requestAnimationFrame(animateScene);
       };
       animateScene();
@@ -123,6 +152,7 @@ const Map = () => {
         scene.remove(clouds);
         scene.remove(moonPivot);
         birdPivots.forEach(bp => scene.remove(bp.group));
+        stormLights.forEach(sl => scene.remove(sl.light));
         geometry.dispose();
         material.dispose();
         moonGeo.dispose();

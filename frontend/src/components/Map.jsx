@@ -66,7 +66,7 @@ const Map = () => {
   useEffect(() => {
     // Initial camera position
     if (globeEl.current) {
-      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, 2000);
+      globeEl.current.pointOfView({ lat: 20, lng: 90, altitude: 3.2 }, 2000);
       
       // Add realistic Earth clouds layer
       const scene = globeEl.current.scene();
@@ -165,12 +165,13 @@ const Map = () => {
   })), []);
 
   return (
-    <div className="animated-sky" style={{ 
+    <div style={{ 
       width: '100%', 
       height: 'calc(100vh - 100px)', 
       position: 'relative', 
       borderRadius: '16px', 
-      overflow: 'hidden'
+      overflow: 'hidden',
+      background: 'radial-gradient(circle at center, #0a192f 0%, #020617 100%)'
     }}>
       {/* Header Overlay */}
       <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(10px)', padding: '16px 24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -296,7 +297,7 @@ const Map = () => {
 
       <Globe
         ref={globeEl}
-        globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-blue-marble.jpg"
+        globeImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-dark.jpg"
         bumpImageUrl="https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/imgs/earth-topology.png"
         backgroundColor="rgba(0,0,0,0)"
         

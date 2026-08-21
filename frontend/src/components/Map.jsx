@@ -3,6 +3,7 @@ import Globe from 'react-globe.gl';
 import { motion } from 'framer-motion';
 import { Activity, MapPin, Upload } from 'lucide-react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useToast } from '../context/ToastContext';
 import FileDropzone from './FileDropzone';
 import { AnimatePresence } from 'framer-motion';
@@ -59,8 +60,47 @@ const Map = () => {
       moonPivot.add(moon);
       scene.add(moonPivot);
       
+      // Add Flying Birds (Flamingos)
+      const gltfLoader = new GLTFLoader();
+      const mixers = [];
+      const birdPivots = [];
+      
+      gltfLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Flamingo.glb', (gltf) => {
+        const birdMesh = gltf.scene.children[0];
+        // Scale down the bird to fit the globe proportions appropriately
+        birdMesh.scale.set(0.15, 0.15, 0.15);
+        
+        // Create a flock of 6 birds
+        for(let i = 0; i < 6; i++) {
+          const bird = birdMesh.clone();
+          const mixer = new THREE.AnimationMixer(bird);
+          mixer.clipAction(gltf.animations[0]).setDuration(1).play();
+          mixers.push(mixer);
+          
+          const pivot = new THREE.Group();
+          
+          // Position bird just outside the clouds radius (101.5)
+          bird.position.set(106 + Math.random() * 4, (Math.random() - 0.5) * 40, 0);
+          
+          // Make the bird face the direction of its orbit (tangent to the circle)
+          bird.rotation.y = Math.PI / 2;
+          // Slight tilt for realism
+          bird.rotation.z = (Math.random() - 0.5) * 0.4;
+          
+          // Randomize orbit planes so they fly all over the earth
+          pivot.rotation.x = (Math.random() - 0.5) * Math.PI;
+          pivot.rotation.y = Math.random() * Math.PI * 2;
+          
+          pivot.add(bird);
+          birdPivots.push({ group: pivot, speed: 0.0015 + Math.random() * 0.0015 });
+          scene.add(pivot);
+        }
+      });
+      
+      const clock = new THREE.Clock();
       let animationFrameId;
       const animateScene = () => {
+        const delta = clock.getDelta();
         if (clouds) {
           clouds.rotation.y += 0.002; 
         }
@@ -68,6 +108,12 @@ const Map = () => {
           moonPivot.rotation.y -= 0.005; // orbit speed
           moon.rotation.y += 0.01; // moon's own rotation
         }
+        
+        mixers.forEach(m => m.update(delta));
+        birdPivots.forEach(bp => {
+          bp.group.rotation.y -= bp.speed; // rotate negatively so they fly forward (due to bird.rotation.y)
+        });
+        
         animationFrameId = requestAnimationFrame(animateScene);
       };
       animateScene();
@@ -76,6 +122,7 @@ const Map = () => {
         cancelAnimationFrame(animationFrameId);
         scene.remove(clouds);
         scene.remove(moonPivot);
+        birdPivots.forEach(bp => scene.remove(bp.group));
         geometry.dispose();
         material.dispose();
         moonGeo.dispose();

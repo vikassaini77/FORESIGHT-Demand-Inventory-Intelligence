@@ -8,6 +8,45 @@ import FileDropzone from './FileDropzone';
 import { AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
+const mockVolumeData = [
+  { time: 'Mon', value: 120 }, { time: 'Tue', value: 130 }, { time: 'Wed', value: 110 },
+  { time: 'Thu', value: 145 }, { time: 'Fri', value: 135 }, { time: 'Sat', value: 160 }, { time: 'Sun', value: 155 }
+];
+
+const mockOnTimeData = [
+  { time: 'Mon', value: 92 }, { time: 'Tue', value: 94 }, { time: 'Wed', value: 91 },
+  { time: 'Thu', value: 96 }, { time: 'Fri', value: 95 }, { time: 'Sat', value: 98 }, { time: 'Sun', value: 97 }
+];
+
+const activeVessels = [
+  { id: 'AE12831', loc: 'Shanghai', eta: '31.2m' },
+  { id: 'AE10022', loc: 'Shanghai', eta: '31.3m' },
+  { id: 'AE10003', loc: 'New York', eta: '29.3m' },
+  { id: 'AE10037', loc: 'Rotterdam', eta: '20.5m' },
+  { id: 'AE10078', loc: 'New York', eta: '20.5m' },
+];
+
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+};
+
+const Sparkline = ({ data, color }) => (
+  <div style={{ height: '50px', width: '100%', marginTop: '4px' }}>
+    <ResponsiveContainer>
+      <AreaChart data={data}>
+        <defs>
+          <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.6}/>
+            <stop offset="95%" stopColor={color} stopOpacity={0}/>
+          </linearGradient>
+        </defs>
+        <Area type="monotone" dataKey="value" stroke={color} fill={`url(#gradient-${color})`} strokeWidth={2} style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+      </AreaChart>
+    </ResponsiveContainer>
+  </div>
+);
+
 const Map = () => {
   const globeEl = useRef();
   const [arcsData, setArcsData] = useState([]);

@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { useToast } from '../context/ToastContext';
 import FileDropzone from './FileDropzone';
 import { AnimatePresence } from 'framer-motion';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 const Map = () => {
   const globeEl = useRef();

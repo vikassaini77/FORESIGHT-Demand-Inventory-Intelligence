@@ -1,7 +1,7 @@
 <div align="center">
   
   <!-- Project Logo Placeholder -->
-  <img src="docs/assets/logo.png" alt="FORESIGHT OS Logo" width="200"/>
+  <img src="docs/assets/logo.jpg" alt="FORESIGHT OS Logo" width="200"/>
 
   # FORESIGHT OS
 
@@ -351,11 +351,11 @@ locust -f locustfile.py --host=http://localhost:8000
 
 | Dashboard & Overview | Spatial Command Center |
 | -------------------- | ---------------------- |
-| ![Dashboard Placeholder](docs/assets/dashboard.png) | ![Command Center Placeholder](docs/assets/command_center.png) |
+| ![Dashboard Placeholder](docs/assets/dashboard.jpg) | ![Command Center Placeholder](docs/assets/command_center.jpg) |
 
 | Global 3D Map | AI Data Ingestion |
 | ------------- | ----------------- |
-| ![Map Placeholder](docs/assets/map.png) | ![Ingestion Placeholder](docs/assets/ingestion.png) |
+| ![Map Placeholder](docs/assets/map.jpg) | ![Ingestion Placeholder](docs/assets/ingestion.jpg) |
 
 ---
 

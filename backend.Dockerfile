@@ -22,4 +22,4 @@ COPY retail_system.db /app/retail_system.db
 EXPOSE 8000
 
 # Run FastAPI server
-CMD ["uvicorn", "src.app_api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn src.app_api:app --host 0.0.0.0 --port $PORT

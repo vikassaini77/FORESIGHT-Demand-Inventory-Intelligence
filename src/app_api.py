@@ -201,11 +201,16 @@ def chat_with_ai(chat_input: ChatMessage):
         print(f"Received chat request: {chat_input.message}")
         genai.configure(api_key=api_key)
         
-        system_prompt = """You are FORESIGHT OS, an elite AI assistant for a retail and supply chain management platform. 
-        Your tone is professional, high-tech, and helpful. 
-        CRITICAL RULE: Keep your answers EXTREMELY concise (maximum 2-3 sentences). Do not generate long markdown tables unless explicitly asked. Fast, punchy responses only."""
+        system_prompt = "You are FORESIGHT OS. You MUST answer in 1 to 2 short sentences max. No formatting, no tables, no lists."
         
-        model = genai.GenerativeModel('gemini-3.6-flash', system_instruction=system_prompt)
+        model = genai.GenerativeModel(
+            'gemini-3.6-flash', 
+            system_instruction=system_prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=60,
+                temperature=0.2
+            )
+        )
         print("Model configured, calling generate_content...")
         response = model.generate_content(chat_input.message)
         print("Received response from Gemini.")

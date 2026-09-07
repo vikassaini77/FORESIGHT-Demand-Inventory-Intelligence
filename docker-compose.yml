@@ -11,6 +11,7 @@ services:
       - DATABASE_URL=sqlite:///retail_system.db
       - JWT_SECRET=super_secret_jwt_signature_key_prod
       - FRONTEND_URL=http://localhost:80
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - ./retail_system.db:/app/retail_system.db
 

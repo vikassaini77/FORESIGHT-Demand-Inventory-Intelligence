@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 # Load local environment variables from .env
 load_dotenv()
@@ -192,16 +193,17 @@ class ChatMessage(BaseModel):
 
 @app.post("/api/chat")
 def chat_with_ai(chat_input: ChatMessage):
-    # Mock AI logic based on keywords
-    msg = chat_input.message.lower()
-    if "region" in msg and "stockout" in msg:
-        return {"response": "Based on our data, the North region has the highest stockout risk due to severe weather conditions delaying supplier lead times."}
-    elif "price" in msg or "optimal" in msg:
-        return {"response": "I recommend checking the Pricing Optimizer tab. We've run 5 different price elasticity scenarios, and the optimal price changes vary by product category."}
-    elif "reorder" in msg:
-        return {"response": "We currently have items flagged for reorder. You can generate automated Purchase Orders from the Inventory tab!"}
-    else:
-        return {"response": "I am FORESIGHT, your AI data analyst. I can answer questions about stockout risks, pricing optimization, and inventory health. How can I assist you today?"}
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return {"response": "Error: GEMINI_API_KEY is not set in the environment variables."}
+    
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(chat_input.message)
+        return {"response": response.text}
+    except Exception as e:
+        return {"response": f"Error communicating with AI: {str(e)}"}
 
 # --- DASHBOARD MOCK ENDPOINTS ---
 class ForecastRequest(BaseModel):

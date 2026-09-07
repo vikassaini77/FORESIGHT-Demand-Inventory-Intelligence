@@ -198,11 +198,20 @@ def chat_with_ai(chat_input: ChatMessage):
         return {"response": "Error: GEMINI_API_KEY is not set in the environment variables."}
     
     try:
+        print(f"Received chat request: {chat_input.message}")
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-3.6-flash')
+        
+        system_prompt = """You are FORESIGHT OS, an elite AI assistant for a retail and supply chain management platform. 
+        Your tone is professional, high-tech, and helpful. 
+        CRITICAL RULE: Keep your answers EXTREMELY concise (maximum 2-3 sentences). Do not generate long markdown tables unless explicitly asked. Fast, punchy responses only."""
+        
+        model = genai.GenerativeModel('gemini-3.6-flash', system_instruction=system_prompt)
+        print("Model configured, calling generate_content...")
         response = model.generate_content(chat_input.message)
+        print("Received response from Gemini.")
         return {"response": response.text}
     except Exception as e:
+        print(f"Error in chat_with_ai: {e}")
         return {"response": f"Error communicating with AI: {str(e)}"}
 
 # --- DASHBOARD MOCK ENDPOINTS ---
